@@ -21,3 +21,6 @@ env/
 # VSCode / IDE stuff
 .vscode/
 .idea/
+
+assets/
+client/assets/
