@@ -1,0 +1,95 @@
+
+
+## 🧭 Project Roadmap: Mini Militia PC Clone (2D Multiplayer Shooter)
+
+### 🔧 1. **Project Setup**
+- Set up a clean folder structure.
+- Initialize `requirements.txt`.
+- Create virtual environment and install dependencies.
+- Copy real-time backend/frontend communication code from your previous project.
+
+### 📁 2. **Organize Project Structure**
+```
+
+```
+
+---
+
+### 🧱 3. **Backend (WebSocket Server)**
+- Setup Django + Channels
+- Create `GameConsumer` (WebSocket handling logic)
+- Maintain in-memory player state (position, health, etc.)
+- Implement:
+  - connect/disconnect
+  - broadcast updates
+  - attack logic (maybe later)
+
+---
+
+### 🎮 4. **Frontend (Pygame Game Client)**
+- Create a simple 2D player entity
+- Capture keyboard/mouse input
+- Send position to server via WebSocket
+- Render all player positions from server
+- Collision/physics if needed
+
+---
+
+### 🔁 5. **Real-Time Communication**
+- Player moves → send (x, y) to server
+- Server broadcasts all player states
+- Game loop receives and renders updates in real-time
+
+---
+
+### 🔫 6. **Core Gameplay Mechanics**
+- Movement
+- Shooting (directional bullets)
+- Health & respawn system
+- Simple map (platforms/walls)
+
+---
+
+### 🌐 7. **Multiplayer Handling**
+- Unique player IDs
+- Spawn logic (avoid overlap)
+- Synchronize latency & delay handling
+
+---
+
+### 📦 8. **Optimization & Cleanup**
+- Use delta timing for consistent movement
+- Limit updates to 30Hz or similar
+- Clear disconnected players
+- Logs + debugging tools
+
+---
+
+### 🚀 9. **Testing & Demo**
+- Test with 2 clients on localhost
+- Later: LAN/WAN testing (port forwarding or Hamachi/ZeroTier)
+- Record or export a working demo
+
+---
+
+### 📋 10. **Future Improvements**
+- Multiple weapons
+- Animations
+- Power-ups
+- Team mode
+- Map editor
+
+---
+
+### 📄 Example `requirements.txt`
+```
+pygame==2.5.2
+channels==4.0.0
+daphne==4.1.0
+asgiref==3.7.2
+websockets==12.0
+django==4.2
+```
+
+---
+

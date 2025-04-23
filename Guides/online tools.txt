@@ -1,0 +1,55 @@
+
+---
+
+### 🎨 **1. Asset Stores (Free & Paid)**
+
+| Platform        | Description |
+|----------------|-------------|
+| **[itch.io](https://itch.io/game-assets)** | Massive library of free and paid 2D sprites, tilesets, characters, etc. Search for “top-down shooter” or “2D fighting.” |
+| **[OpenGameArt.org](https://opengameart.org/)** | 100% free and open-source sprites, animations, audio, UI. Look for CC0 or CC-BY licensed packs. |
+| **[Kenney.nl](https://kenney.nl/assets)** | Free & professional quality 2D/3D assets, including character packs and gun sprites. |
+| **[CraftPix.net](https://craftpix.net/)** | High-quality 2D game assets (free and subscription tiers). |
+| **[GameDev Market](https://www.gamedevmarket.net/)** | Marketplace for indie-friendly game art, often bundled and ready for animation. |
+
+---
+
+### 🛠️ **2. Animation Tools (No Coding Required)**
+
+These tools allow you to **import a sprite sheet or body parts and animate them visually**.
+
+| Tool            | What it’s great for |
+|-----------------|---------------------|
+| **[Piskel](https://www.piskelapp.com/)** (Free) | Online pixel art tool + animation editor. Easy for tweaking character animations frame-by-frame. |
+| **[Aseprite](https://www.aseprite.org/)** (Paid) | Industry standard for pixel animation. Tons of tutorials available. Worth it if you want deeper control later. |
+| **[Spine](http://esotericsoftware.com/)** (Paid) | Bone-based animation—ideal if your assets are made of separate limbs/parts. Super smooth movement. |
+| **[DragonBones](https://www.dragonbones.com/en/index.html)** (Free) | Free Spine alternative for skeletal animation. Can export to spritesheets or JSON. |
+| **[Unity 2D Sprite Editor](https://docs.unity3d.com/Manual/SpriteEditor.html)** | Even though you’re using Pygame, it’s handy for slicing sprite sheets quickly if needed. |
+
+---
+
+### 🧰 **3. Pre-Animated Packs You Can Just Use**
+
+Search for terms like:
+- "2D shooter character pack"
+- "Top-down soldier sprite"
+- "Mini Militia character clone"
+- "Pixel gun animations"
+- "Explosion sprite sheet"
+
+You’ll find:
+- **Walking / running / shooting** loops
+- **Melee attack** swings
+- **Gun recoil**
+- **Reload animations**
+- **Jetpack animations** (for Mini Militia vibes)
+
+---
+
+### ✅ What To Look For:
+- **Sprite Sheets or Frame-by-frame PNGs**
+- **Animation strips** (single row of frames)
+- **License**: Use CC0, CC-BY, or commercial-use allowed packs
+- **Consistent art style** across characters, weapons, and maps
+
+---
+
