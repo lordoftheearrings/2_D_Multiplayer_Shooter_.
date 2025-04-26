@@ -1,4 +1,4 @@
-# 🔫 Mini Militia PC (2D Multiplayer Shooter)
+# 🔫2D Multiplayer Shooter
 
 A PC-based 2D multiplayer shooter inspired by Mini Militia, built using **Pygame** for the frontend and **Django + Channels + Redis** for the real-time backend.
 

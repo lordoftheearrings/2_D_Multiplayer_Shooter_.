@@ -20,7 +20,7 @@ class Animation:
             self.time_accumulator = 0
             self.frame_index = (self.frame_index + 1) % len(self.images)
 
-    def get_frame(self, index):
+    def get_frame(self):
         """Returns the current frame of the animation, scaled if needed."""
         frame = self.images[self.frame_index]
         if self.scale != 1:

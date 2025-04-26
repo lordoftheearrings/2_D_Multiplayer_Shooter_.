@@ -1,4 +1,3 @@
-
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
@@ -8,21 +7,15 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
         self.group_name = "game"
-
-        # Add to broadcast group
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
     async def disconnect(self, close_code):
         player_id = getattr(self, "player_id", None)
         print(f"[DISCONNECTED] Player left: {player_id}")
 
-        if player_id:
-            if player_id in active_players:
-                del active_players[player_id]
-                print(f"[DEBUG] Removed player: {player_id}")
-            else:
-                print(f"[DEBUG] Player {player_id} not found in active_players")
-
+        if player_id and player_id in active_players:
+            del active_players[player_id]
+            print(f"[DEBUG] Removed player: {player_id}")
             await self.broadcast_players(player_left=player_id)
 
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
@@ -30,16 +23,24 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
-            player_id = data.get("player_id")
-            x = data.get("x")
-            y = data.get("y")
 
-            # Sanitize: store only clean IDs (e.g., "8375")
+            player_id = data.get("player_id")
+            if not player_id:
+                return  # Ignore invalid packets
+
+            # Clean player ID
             clean_id = str(player_id).split("!")[0].split(".")[-1]
             self.player_id = clean_id
 
-            # Update player position
-            active_players[clean_id] = {"x": x, "y": y}
+            # Capture full player data
+            active_players[clean_id] = {
+                "x": data.get("x", 0),
+                "y": data.get("y", 0),
+                "health": data.get("health", 100),
+                "is_flying": data.get("is_flying", False),
+                "is_running": data.get("is_running", False),
+                "facing_left": data.get("facing_left", False),
+            }
 
             await self.broadcast_players()
 
@@ -48,15 +49,21 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def broadcast_players(self, player_left=None):
         player_data = [
-            {"player_id": pid, "x": pos["x"], "y": pos["y"]}
-            for pid, pos in active_players.items()
+            {
+                "player_id": pid,
+                "x": pdata["x"],
+                "y": pdata["y"],
+                "health": pdata["health"],
+                "is_flying": pdata["is_flying"],
+                "is_running": pdata["is_running"],
+                "facing_left": pdata["facing_left"],
+            }
+            for pid, pdata in active_players.items()
         ]
 
         message = {"players": player_data}
         if player_left:
             message["player_left"] = player_left
-
-        print(f"[BROADCAST] Sending data: {message}")
 
         await self.channel_layer.group_send(
             self.group_name,
