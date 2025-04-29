@@ -8,14 +8,14 @@ from networking import WebSocketClient
 from camera import Camera
 from map import GameMap
 from player import Player, RemotePlayer
-
+from firing import FiringManager
 
 # Initialize Pygame
 pygame.init()
 
 # Set up the game screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Mini Militia PC")
+pygame.display.set_caption("2D Game")
 FONT = pygame.font.SysFont(None, 20)
 
 # Initialize the game map and camera
@@ -23,6 +23,8 @@ game_map = GameMap('map.tmx', 'background.jpg')
 map_width = game_map.tmx_data.width * game_map.tmx_data.tilewidth
 map_height = game_map.tmx_data.height * game_map.tmx_data.tileheight
 camera = Camera(map_width, map_height)
+
+
 
 clock = pygame.time.Clock()
 
@@ -33,13 +35,15 @@ spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
 while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER_SIZE)):
     spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
 
-player = Player(player_id, spawn_x, spawn_y, LOCAL_PLAYER_COLOR)
+player = Player(player_id, spawn_x, spawn_y, LOCAL_PLAYER_COLOR, camera)
+
+
 
 # Dictionary to hold other players
 other_players = {}
 
 # Networking setup
-client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players)
+client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players,camera)
 threading.Thread(target=lambda: asyncio.run(client.connect()), daemon=True).start()
 
 # Game loop
@@ -52,10 +56,18 @@ while True:
     keys = pygame.key.get_pressed()
     dx, dy = 0, 0
     moved = False
+    player.handle_firing_input()
+    
 
-    is_flying_now = keys[pygame.K_UP] and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT])
+    # Support both arrow keys and WASD
+    up = keys[pygame.K_UP] or keys[pygame.K_w]
+    down = keys[pygame.K_DOWN] or keys[pygame.K_s]
+    left = keys[pygame.K_LEFT] or keys[pygame.K_a]
+    right = keys[pygame.K_RIGHT] or keys[pygame.K_d]
 
-    player.is_flying = keys[pygame.K_UP]
+    is_flying_now = up and (left or right)
+
+    player.is_flying = up
 
     if getattr(player, "was_flying", False) and not is_flying_now:
         player.inertia_active = True
@@ -63,18 +75,18 @@ while True:
     player.was_flying = is_flying_now
 
     if is_flying_now:
-        if keys[pygame.K_LEFT]:
+        if left:
             player.velocity_x = max(player.velocity_x - PLAYER_ACCELERATION, -PLAYER_SPEED)
             player.facing_left = True
-        elif keys[pygame.K_RIGHT]:
+        elif right:
             player.velocity_x = min(player.velocity_x + PLAYER_ACCELERATION, PLAYER_SPEED)
             player.facing_left = False
         player.inertia_active = False
-    elif keys[pygame.K_LEFT]:
+    elif left:
         player.velocity_x = max(player.velocity_x - PLAYER_ACCELERATION, -PLAYER_SPEED)
         player.facing_left = True
         player.inertia_active = False
-    elif keys[pygame.K_RIGHT]:
+    elif right:
         player.velocity_x = min(player.velocity_x + PLAYER_ACCELERATION, PLAYER_SPEED)
         player.facing_left = False
         player.inertia_active = False
@@ -89,16 +101,18 @@ while True:
         if abs(player.velocity_x) < 0.1:
             player.velocity_x = 0
 
-    player.is_running = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]
+    player.is_running = left or right
+
+    
 
     dx = player.velocity_x
     player.velocity_y += GRAVITY
 
-    if keys[pygame.K_UP]:
+    if up:
         player.velocity_y = -JETPACK_FORCE
         if player.is_local:  # Call sound manager only for local player
             player.sound_manager.fade_in()
-    if keys[pygame.K_DOWN]:
+    if down:
         player.velocity_y += 0.1 * PLAYER_SPEED
 
     dy = player.velocity_y
@@ -151,9 +165,9 @@ while True:
 
     player.update(keys, clock.get_time() / 1000)
     player.draw(screen, camera)
+    player.update_bullets()
+    player.draw_bullets(screen)
 
-  
-    # Update and draw remote players
     for remote_player in other_players.values():
         remote_player.update(
             health=remote_player.health,
@@ -162,7 +176,11 @@ while True:
             facing_left=remote_player.facing_left, 
             delta_time=clock.get_time() / 1000
         )
-        remote_player.draw(screen, camera)  # Draw remote player with health bar color
+        remote_player.draw(screen, camera)  
+        remote_player.update_bullets()
+        remote_player.draw_bullets(screen, camera)
+    
+
 
     pygame.display.flip()
     clock.tick(60)

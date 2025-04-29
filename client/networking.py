@@ -6,10 +6,12 @@ from utils import *
 from player import RemotePlayer
 
 class WebSocketClient:
-    def __init__(self, uri, player, other_players):
+    def __init__(self, uri, player, other_players,camera):
         self.uri = uri
         self.player = player
         self.other_players = other_players
+        self.camera = camera
+        self.remote_bullets = []
         self.ws = None
         self.loop = None
         self.last_send_time = 0
@@ -38,17 +40,29 @@ class WebSocketClient:
                     "y": self.player.y,
                     "health": self.player.health,
                     "is_flying": self.player.is_flying,
-                    "is_running": self.player.is_running,#abs(self.player.velocity_x) > 0.5 and self.player.on_ground,
+                    "is_running": self.player.is_running,
                     "facing_left": self.player.facing_left
                 }
                 await self.ws.send(json.dumps(data))
                 self.last_send_time = now
+
+                for bullet in self.player.bullets:
+                    if bullet:
+                        bullet_data = {
+                        "type": "bullet",
+                        "player_id": self.player.id,
+                        "x": bullet.x,
+                        "y": bullet.y,
+                        "angle": bullet.angle
+                    }
+                    await self.ws.send(json.dumps(bullet_data))
             except Exception as e:
                 print("[Send Error]", e)
 
     def send_from_main_thread(self):
         if self.ws and self.loop:
             self.loop.call_soon_threadsafe(asyncio.create_task, self.send_position())
+
     async def handle_message(self, message):
         try:
             data = json.loads(message)
@@ -65,12 +79,12 @@ class WebSocketClient:
                         remote_player.is_running = player_data.get("is_running", False)
                         remote_player.facing_left = player_data.get("facing_left", False)
                     else:
-                        # --- Create new RemotePlayer directly ---
                         new_remote = RemotePlayer(
                             pid,
                             player_data["x"],
                             player_data["y"],
-                            REMOTE_PLAYER_COLOR
+                            REMOTE_PLAYER_COLOR,
+                            self.camera
                         )
                         new_remote.health = player_data.get("health", 100)
                         new_remote.is_flying = player_data.get("is_flying", False)
@@ -82,5 +96,18 @@ class WebSocketClient:
                 pid = data["player_left"]
                 if pid in self.other_players:
                     del self.other_players[pid]
+
+            if data.get("type") == "bullet":
+                bullet_data = {
+                "player_id": data["player_id"],
+                "x": data["x"],
+                "y": data["y"],
+                "angle": data["angle"]
+                }
+                if bullet_data["player_id"] != self.player.id:
+                    self.remote_bullets.append(bullet_data)
+            
         except Exception as e:
             print("[Message Handling Error]", e)
+    
+    

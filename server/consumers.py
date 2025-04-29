@@ -23,16 +23,26 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
+            if data.get("type") == "bullet":
+                print(f"[DEBUG] Bullet received: {data}")
+                await self.channel_layer.group_send(
+                    self.group_name,
+                    {
+                        "type": "send_update",
+                        "message": data  
+                    }
+                )
+                return 
 
             player_id = data.get("player_id")
             if not player_id:
-                return  # Ignore invalid packets
+                return  
 
-            # Clean player ID
+           
             clean_id = str(player_id).split("!")[0].split(".")[-1]
             self.player_id = clean_id
 
-            # Capture full player data
+            
             active_players[clean_id] = {
                 "x": data.get("x", 0),
                 "y": data.get("y", 0),
@@ -43,6 +53,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             }
 
             await self.broadcast_players()
+
+             
 
         except Exception as e:
             print(f"[ERROR] receive() failed: {e}")
@@ -75,6 +87,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def send_update(self, event):
         try:
+            message = event["message"]
+            if message.get("type") == "bullet":
+                print(f"[DEBUG] Broadcasting bullet data to client: {message}")
             await self.send(text_data=json.dumps(event["message"]))
         except Exception as e:
             print(f"[ERROR] send_update() failed: {e}")

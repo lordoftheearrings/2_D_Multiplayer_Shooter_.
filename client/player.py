@@ -1,30 +1,32 @@
 import pygame
 from animation import Animation
 from sound import SoundManager
-from utils import *  # Includes PLAYER_SIZE, HEALTH_BAR_WIDTH, etc.
+from utils import *  
+from firing import Bullet,FiringManager
 
 class Player:
-    def __init__(self, player_id, x, y, color, is_local=True):
+    def __init__(self, player_id, x, y, color, camera, is_local=True):
         self.id = player_id
         self.x = x
         self.y = y
         self.color = color
         self.is_local = is_local
-        self.health = 100  # Health from 0 to 100
-
+        self.health = 100 
+        self.camera=camera 
+        self.bullets = []
         self.rect = pygame.Rect(self.x, self.y, PLAYER_SIZE, PLAYER_SIZE)
 
         # Local and remote animations
         if is_local:
             self.animations = {
-                "idle": Animation("assets/player/idleone.png", 1, scale=1.5),
-                "run": Animation(["assets/player/runone.png", "assets/player/runtwo.png"], 0.1, scale=1.5),
-                "fly": Animation("assets/player/flyone.png", 1, scale=1.5),
+                "idle": Animation("assets/player/idleone.png", 0.1, scale=1.4),
+                "run": Animation(["assets/player/runone.png", "assets/player/runtwo.png"], 0.2, scale=1.4),
+                "fly": Animation("assets/player/flyone.png", 0.1, scale=1.4),
             }
         else:
             self.animations = {
                 "idle": Animation("assets/player/enemyidle.png", 1, scale=1.5),
-                "run": Animation(["assets/player/enemyrunone.png", "assets/player/enemyruntwo.png"], 0.1, scale=1.5),
+                "run": Animation(["assets/player/enemyrunone.png", "assets/player/enemyruntwo.png"], 0.2, scale=1.5),
                 "fly": Animation("assets/player/enemyfly.png", 1, scale=1.5),
             }
 
@@ -41,16 +43,17 @@ class Player:
         self.velocity_y = 0
         self.on_ground = False
 
-        # Only local player needs sounds
+        
         self.sound_manager = SoundManager() if self.is_local else None
+        self.firing_manager = FiringManager(self, camera) if is_local else None
 
     def update(self, keys, delta_time):
         if self.is_local:
             # Update animation based on input
-            if keys[pygame.K_UP]:
+            if keys[pygame.K_UP] or keys[pygame.K_w]:
                 self.current_animation = "fly"
                 self.sound_manager.fade_in()
-            elif keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
+            elif keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_a] or keys[pygame.K_d]:
                 self.current_animation = "run"
             else:
                 self.current_animation = "idle"
@@ -92,16 +95,28 @@ class Player:
         self.y = y
         self.rect.x = x
         self.rect.y = y
+
+    def handle_firing_input(self):
+        if self.is_local and self.firing_manager:
+            self.firing_manager.handle_input()
+
+    def update_bullets(self):
+        if self.is_local and self.firing_manager:
+            self.firing_manager.update()
+
+    def draw_bullets(self, screen):
+        if self.is_local and self.firing_manager:
+            self.firing_manager.draw(self, screen, self.firing_manager.camera)
         
 class RemotePlayer(Player):
-    def __init__(self, id, x, y, color):
-        super().__init__(id, x, y, color, is_local=False)  # Set is_local to False for remote players
-        self.health = 100  # Initial health for remote players
-
+    def __init__(self, id, x, y, color,camera):
+        super().__init__(id, x, y, color,camera, is_local=False)  
+        self.health = 100 
+        self.remote_bullets = [] 
         # Setting the animations similar to the Player class
         self.animations = {
             "idle": Animation("assets/player/enemyidle.png", 1, scale=1.5),
-            "run": Animation(["assets/player/enemyrunone.png", "assets/player/enemyruntwo.png"], 0.1, scale=1.5),
+            "run": Animation(["assets/player/enemyrunone.png", "assets/player/enemyrunthree.png"], 0.2, scale=1.5),
             "fly": Animation("assets/player/enemyfly.png", 1, scale=1.5),
         }
         self.current_animation = "idle"  # Default to idle animation
@@ -110,6 +125,9 @@ class RemotePlayer(Player):
         # New flags for animation states
         self.is_flying = False
         self.is_running = False
+        self.camera=camera
+
+    
 
     def update(self, is_flying, is_running, facing_left, health, delta_time=None):
         if delta_time is not None:
@@ -129,6 +147,8 @@ class RemotePlayer(Player):
             self.current_animation = "run"
         else:
             self.current_animation = "idle"
+        
+        
 
     def draw(self, screen, camera):
         frame = self.animations[self.current_animation].get_frame()
@@ -157,3 +177,13 @@ class RemotePlayer(Player):
         fill_color = (0, 255, 0) if self.is_local else (255, 0, 0)  # Green for local, Red for enemy
         fill_width = int((self.health / 100) * HEALTH_BAR_WIDTH)
         pygame.draw.rect(screen, fill_color, (bar_x, bar_y, fill_width, HEALTH_BAR_HEIGHT))
+
+    def update_bullets(self):
+        for b in self.remote_bullets[:]:
+            b.update()
+            if b.has_exceeded_range():
+                self.remote_bullets.remove(b)
+
+    def draw_bullets(self, screen, camera):
+        for b in self.remote_bullets:
+            b.draw(screen, camera)
