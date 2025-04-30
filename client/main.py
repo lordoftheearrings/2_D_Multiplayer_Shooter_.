@@ -24,8 +24,6 @@ map_width = game_map.tmx_data.width * game_map.tmx_data.tilewidth
 map_height = game_map.tmx_data.height * game_map.tmx_data.tileheight
 camera = Camera(map_width, map_height)
 
-
-
 clock = pygame.time.Clock()
 
 # Local player initialization
@@ -36,20 +34,20 @@ while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER
     spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
 
 player = Player(player_id, spawn_x, spawn_y, LOCAL_PLAYER_COLOR, camera)
-
-
+player.firing_manager = FiringManager(player, camera, game_map)
 
 # Dictionary to hold other players
 other_players = {}
 
 # Networking setup
-client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players,camera)
-threading.Thread(target=lambda: asyncio.run(client.connect()), daemon=True).start()
+client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players, camera, game_map)
+client.start()  # Start the event loop
 
 # Game loop
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            client.stop()  # Stop the event loop
             pygame.quit()
             sys.exit()
 
@@ -58,7 +56,6 @@ while True:
     moved = False
     player.handle_firing_input()
     
-
     # Support both arrow keys and WASD
     up = keys[pygame.K_UP] or keys[pygame.K_w]
     down = keys[pygame.K_DOWN] or keys[pygame.K_s]
@@ -102,8 +99,6 @@ while True:
             player.velocity_x = 0
 
     player.is_running = left or right
-
-    
 
     dx = player.velocity_x
     player.velocity_y += GRAVITY
@@ -163,24 +158,24 @@ while True:
                 )
                 screen.blit(tile_surface, camera.apply(tile_rect))
 
+    # Update and draw local player
     player.update(keys, clock.get_time() / 1000)
     player.draw(screen, camera)
     player.update_bullets()
     player.draw_bullets(screen)
 
+    # Update and draw remote players
     for remote_player in other_players.values():
         remote_player.update(
+            is_flying=remote_player.is_flying,
+            is_running=remote_player.is_running,
+            facing_left=remote_player.facing_left,
             health=remote_player.health,
-            is_flying=remote_player.is_flying, 
-            is_running=remote_player.is_running, 
-            facing_left=remote_player.facing_left, 
             delta_time=clock.get_time() / 1000
         )
-        remote_player.draw(screen, camera)  
+        remote_player.draw(screen, camera)
         remote_player.update_bullets()
         remote_player.draw_bullets(screen, camera)
     
-
-
     pygame.display.flip()
     clock.tick(60)

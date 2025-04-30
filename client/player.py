@@ -12,7 +12,7 @@ class Player:
         self.color = color
         self.is_local = is_local
         self.health = 100 
-        self.camera=camera 
+        self.camera = camera 
         self.bullets = []
         self.rect = pygame.Rect(self.x, self.y, PLAYER_SIZE, PLAYER_SIZE)
 
@@ -43,11 +43,10 @@ class Player:
         self.velocity_y = 0
         self.on_ground = False
 
-        
         self.sound_manager = SoundManager() if self.is_local else None
         self.firing_manager = FiringManager(self, camera) if is_local else None
 
-    def update(self, keys, delta_time):
+    def update(self, keys=None, delta_time=None, is_flying=None, is_running=None, facing_left=None):
         if self.is_local:
             # Update animation based on input
             if keys[pygame.K_UP] or keys[pygame.K_w]:
@@ -58,9 +57,19 @@ class Player:
             else:
                 self.current_animation = "idle"
                 self.sound_manager.fade_out()
+        else:
+            # Update animation based on received state
+            if is_flying:
+                self.current_animation = "fly"
+            elif is_running:
+                self.current_animation = "run"
+            else:
+                self.current_animation = "idle"
+            self.facing_left = facing_left
 
         # Update animation frames
-        self.animations[self.current_animation].update(delta_time)
+        if delta_time is not None:
+            self.animations[self.current_animation].update(delta_time)
 
     def draw(self, screen, camera):
         frame = self.animations[self.current_animation].get_frame()
@@ -109,10 +118,11 @@ class Player:
             self.firing_manager.draw(self, screen, self.firing_manager.camera)
         
 class RemotePlayer(Player):
-    def __init__(self, id, x, y, color,camera):
-        super().__init__(id, x, y, color,camera, is_local=False)  
+    def __init__(self, id, x, y, color, camera, game_map=None):
+        super().__init__(id, x, y, color, camera, is_local=False)
+        self.remote_bullets = []
         self.health = 100 
-        self.remote_bullets = [] 
+        self.game_map = game_map
         # Setting the animations similar to the Player class
         self.animations = {
             "idle": Animation("assets/player/enemyidle.png", 1, scale=1.5),
@@ -121,13 +131,9 @@ class RemotePlayer(Player):
         }
         self.current_animation = "idle"  # Default to idle animation
         self.facing_left = False  # Default to not facing left
-
-        # New flags for animation states
         self.is_flying = False
         self.is_running = False
-        self.camera=camera
-
-    
+        self.camera = camera
 
     def update(self, is_flying, is_running, facing_left, health, delta_time=None):
         if delta_time is not None:
@@ -147,8 +153,22 @@ class RemotePlayer(Player):
             self.current_animation = "run"
         else:
             self.current_animation = "idle"
-        
-        
+
+    def spawn_remote_bullet(self, spawn_x, spawn_y, angle):
+        """Create a new remote bullet with spawn position and angle"""
+        new_bullet = Bullet(spawn_x, spawn_y, angle, self.game_map)
+        self.remote_bullets.append(new_bullet)
+
+    def update_bullets(self):
+        # Update existing bullets
+        for bullet in self.remote_bullets[:]:
+            bullet.update()
+            if bullet.has_exceeded_range():
+                self.remote_bullets.remove(bullet)
+
+    def draw_bullets(self, screen, camera):
+        for bullet in self.remote_bullets:
+            bullet.draw(screen, camera)
 
     def draw(self, screen, camera):
         frame = self.animations[self.current_animation].get_frame()
@@ -177,13 +197,3 @@ class RemotePlayer(Player):
         fill_color = (0, 255, 0) if self.is_local else (255, 0, 0)  # Green for local, Red for enemy
         fill_width = int((self.health / 100) * HEALTH_BAR_WIDTH)
         pygame.draw.rect(screen, fill_color, (bar_x, bar_y, fill_width, HEALTH_BAR_HEIGHT))
-
-    def update_bullets(self):
-        for b in self.remote_bullets[:]:
-            b.update()
-            if b.has_exceeded_range():
-                self.remote_bullets.remove(b)
-
-    def draw_bullets(self, screen, camera):
-        for b in self.remote_bullets:
-            b.draw(screen, camera)
