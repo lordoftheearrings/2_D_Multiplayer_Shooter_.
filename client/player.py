@@ -70,6 +70,8 @@ class Player:
         # Update animation frames
         if delta_time is not None:
             self.animations[self.current_animation].update(delta_time)
+        
+        
 
     def draw(self, screen, camera):
         frame = self.animations[self.current_animation].get_frame()
@@ -116,6 +118,7 @@ class Player:
     def draw_bullets(self, screen):
         if self.is_local and self.firing_manager:
             self.firing_manager.draw(self, screen, self.firing_manager.camera)
+            
         
 class RemotePlayer(Player):
     def __init__(self, id, x, y, color, camera, game_map=None):
@@ -157,6 +160,8 @@ class RemotePlayer(Player):
     def spawn_remote_bullet(self, spawn_x, spawn_y, angle):
         """Create a new remote bullet with spawn position and angle"""
         new_bullet = Bullet(spawn_x, spawn_y, angle, self.game_map)
+        sound_manager = SoundManager()
+        sound_manager.play_bullet_sound()
         self.remote_bullets.append(new_bullet)
 
     def update_bullets(self):

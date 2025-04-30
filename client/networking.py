@@ -139,6 +139,7 @@ class WebSocketClient:
                     "is_flying": self.player.is_flying,
                     "is_running": self.player.is_running,
                     "facing_left": self.player.facing_left
+                    
                 }
                 await self.position_ws.send(json.dumps(data))
                 self.last_position_send = current_time

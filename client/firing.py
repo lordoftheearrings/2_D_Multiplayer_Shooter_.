@@ -33,6 +33,8 @@ class Bullet:
         if self.game_map and self.game_map.check_collision(self.rect):
             self.destroyed = True
 
+        
+        
     def has_exceeded_range(self):
         if self.destroyed:
             return True
@@ -50,7 +52,7 @@ class Bullet:
 
 
 class FiringManager:
-    def __init__(self, player, camera, game_map=None):
+    def __init__(self, player, camera, game_map=None,sound_manager=None):
         self.player = player
         self.camera = camera
         self.game_map = game_map
@@ -58,6 +60,7 @@ class FiringManager:
         self.new_bullets = []
         self.shoot_cooldown = 100
         self.last_shot_time = 0
+        self.sound_manager= sound_manager
 
     def handle_input(self):
         mouse_pressed = pygame.mouse.get_pressed()
@@ -91,6 +94,11 @@ class FiringManager:
         new_bullet = Bullet(sx, sy, angle, self.game_map)
         self.bullets.append(new_bullet)
         self.new_bullets.append(new_bullet)
+
+        if self.sound_manager:
+            self.sound_manager.play_bullet_sound()
+
+        
 
     def update(self):
         for bullet in self.bullets[:]:

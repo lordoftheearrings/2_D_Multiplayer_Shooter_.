@@ -7,8 +7,9 @@ from utils import *
 from networking import WebSocketClient
 from camera import Camera
 from map import GameMap
-from player import Player, RemotePlayer
+from player import Player
 from firing import FiringManager
+from sound import SoundManager
 
 # Initialize Pygame
 pygame.init()
@@ -34,7 +35,8 @@ while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER
     spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
 
 player = Player(player_id, spawn_x, spawn_y, LOCAL_PLAYER_COLOR, camera)
-player.firing_manager = FiringManager(player, camera, game_map)
+sound_manager = SoundManager()
+player.firing_manager = FiringManager(player, camera, game_map, sound_manager)
 
 # Dictionary to hold other players
 other_players = {}
