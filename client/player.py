@@ -3,6 +3,7 @@ from animation import Animation
 from sound import SoundManager
 from utils import *  
 from firing import Bullet,FiringManager
+import time 
 
 class Player:
     def __init__(self, player_id, x, y, color, camera, is_local=True):
@@ -13,6 +14,7 @@ class Player:
         self.is_local = is_local
         self.health = 100 
         self.is_dead = False
+        self.death_time = None
         self.camera = camera 
         self.bullets = []
         self.rect = pygame.Rect(self.x, self.y, PLAYER_SIZE, PLAYER_SIZE)
@@ -75,6 +77,8 @@ class Player:
         
 
     def draw(self, screen, camera):
+        if self.is_dead:
+            return
         frame = self.animations[self.current_animation].get_frame()
         player_rect = pygame.Rect(self.x, self.y, PLAYER_SIZE, PLAYER_SIZE)
         camera_applied_rect = camera.apply(player_rect)
@@ -107,6 +111,17 @@ class Player:
         self.y = y
         self.rect.x = x
         self.rect.y = y
+    
+    
+    def respawn(self, spawn_x, spawn_y):
+        self.x = spawn_x
+        self.y = spawn_y
+        self.rect.x = spawn_x
+        self.rect.y = spawn_y
+        self.health = 100
+        self.is_dead = False
+        self.death_time = None  
+        print(f"Player {self.id} respawned at ({self.x}, {self.y})")
 
     def handle_firing_input(self):
         if self.is_local and self.firing_manager:
@@ -138,6 +153,7 @@ class RemotePlayer(Player):
         self.is_flying = False
         self.is_running = False
         self.camera = camera
+        self.is_dead = False
 
     def update(self, is_flying, is_running, facing_left, health, delta_time=None):
         if delta_time is not None:
@@ -177,8 +193,8 @@ class RemotePlayer(Player):
 
                         if player.health <= 0:
                             player.is_dead = True
+                            player.death_time = time.time()
                             print(f"Player {player.id} is dead!")  
-                            # Trigger respawn logic (handled elsewhere)
 
                         self.remote_bullets.remove(bullet) 
                         break
@@ -186,7 +202,8 @@ class RemotePlayer(Player):
             sound_manager.update_remote_player_volume(local_player_pos,[self])
             sound_manager.play_bullet_sound_remote(self.id)
             if bullet.has_exceeded_range():
-                self.remote_bullets.remove(bullet)
+                if bullet in self.remote_bullets:
+                    self.remote_bullets.remove(bullet)
 
     def draw_bullets(self, screen, camera):
         for bullet in self.remote_bullets:

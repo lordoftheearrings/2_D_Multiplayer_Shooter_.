@@ -1,4 +1,4 @@
-import json
+import json,sys
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 active_players = {}
@@ -34,6 +34,7 @@ class PositionConsumer(BaseConsumer):
                 "is_flying": data.get("is_flying", False),
                 "is_running": data.get("is_running", False),
                 "facing_left": data.get("facing_left", False),
+                "is_dead": data.get("is_dead", False),
             }
 
             # Immediately broadcast the updated player list
@@ -55,12 +56,17 @@ class PositionConsumer(BaseConsumer):
                     "is_flying": pdata["is_flying"],
                     "is_running": pdata["is_running"],
                     "facing_left": pdata["facing_left"],
+                    "is_dead": pdata["is_dead"],
                 })
+            
 
             # Create message with all players
             message = {"players": player_data}
+        
             if player_left:
                 message["player_left"] = player_left
+            
+              
 
             # Broadcast to all connected clients
             await self.channel_layer.group_send(

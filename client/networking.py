@@ -138,7 +138,8 @@ class WebSocketClient:
                     "health": self.player.health,
                     "is_flying": self.player.is_flying,
                     "is_running": self.player.is_running,
-                    "facing_left": self.player.facing_left
+                    "facing_left": self.player.facing_left,
+                    "is_dead": self.player.is_dead,
                     
                 }
                 await self.position_ws.send(json.dumps(data))
@@ -273,6 +274,7 @@ class WebSocketClient:
                         remote_player.is_flying = player_data.get("is_flying", False)
                         remote_player.is_running = player_data.get("is_running", False)
                         remote_player.facing_left = player_data.get("facing_left", False)
+                        remote_player.is_dead = player_data.get("is_dead", False)
                     else:
                         new_remote = RemotePlayer(
                             pid,
@@ -286,6 +288,7 @@ class WebSocketClient:
                         new_remote.is_flying = player_data.get("is_flying", False)
                         new_remote.is_running = player_data.get("is_running", False)
                         new_remote.facing_left = player_data.get("facing_left", False)
+                        new_remote.is_dead = player_data.get("is_dead", False)
                         self.other_players[pid] = new_remote
 
             if "player_left" in data:

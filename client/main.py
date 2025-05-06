@@ -10,6 +10,7 @@ from map import GameMap
 from player import Player
 from firing import FiringManager
 from sound import SoundManager
+import time
 
 # Initialize Pygame
 pygame.init()
@@ -44,7 +45,7 @@ other_players = {}
 # Networking setup
 client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players, camera, game_map)
 client.start()  # Start the event loop
-all_players = player + other_players
+all_players = [player] + list(other_players.values())
 # Game loop
 while True:
     for event in pygame.event.get():
@@ -161,14 +162,38 @@ while True:
                 screen.blit(tile_surface, camera.apply(tile_rect))
 
     # Update and draw local player
-    player.update(keys, clock.get_time() / 1000)
-    local_player_pos= (player.x, player.y)
-    player.draw(screen, camera)
-    player.update_bullets()
-    player.draw_bullets(screen)
+    
 
+    for player in all_players:
+        if player.is_dead and player.death_time:
+            print(f"Player {player.id} is respawning......")
+            if time.time() - player.death_time > 2:
+                spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
+                while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER_SIZE)):
+                    spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
+                player.respawn(spawn_x, spawn_y)
+
+    # Draw and update all players
+    for player in all_players:
+        if player.is_dead:
+            continue  # Skip drawing dead players
+
+        player.draw(screen, camera)
+        if player.is_local:
+            player.update(keys, clock.get_time() / 1000)
+            local_player_pos = (player.x, player.y)  # Update local player position
+        player.update_bullets()
+        player.draw_bullets(screen)
+
+    
+
+
+      
     # Update and draw remote players
     for remote_player in other_players.values():
+        if remote_player.is_dead:
+            continue
+        
         remote_player.update(
             is_flying=remote_player.is_flying,
             is_running=remote_player.is_running,
