@@ -44,7 +44,7 @@ other_players = {}
 # Networking setup
 client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players, camera, game_map)
 client.start()  # Start the event loop
-
+all_players = player + other_players
 # Game loop
 while True:
     for event in pygame.event.get():
@@ -177,7 +177,7 @@ while True:
             delta_time=clock.get_time() / 1000
         )
         remote_player.draw(screen, camera)
-        remote_player.update_bullets(local_player_pos)
+        remote_player.update_bullets(local_player_pos,all_players)
         remote_player.draw_bullets(screen, camera)
     
     pygame.display.flip()

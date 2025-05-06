@@ -22,9 +22,9 @@ class WebSocketClient:
         self.last_position_send = 0
         self.last_bullet_send = 0
         self.last_state_send = 0
-        self.position_rate = 30  # ms
-        self.bullet_rate = 50    # ms
-        self.state_rate = 100    # ms
+        self.position_rate = 20  
+        self.bullet_rate = 20    
+        self.state_rate = 100    
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.reconnect_delay = 1

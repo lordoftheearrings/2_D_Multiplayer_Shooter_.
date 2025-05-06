@@ -12,6 +12,7 @@ class Player:
         self.color = color
         self.is_local = is_local
         self.health = 100 
+        self.is_dead = False
         self.camera = camera 
         self.bullets = []
         self.rect = pygame.Rect(self.x, self.y, PLAYER_SIZE, PLAYER_SIZE)
@@ -162,10 +163,25 @@ class RemotePlayer(Player):
         new_bullet = Bullet(spawn_x, spawn_y, angle, self.game_map)
         self.remote_bullets.append(new_bullet)
 
-    def update_bullets(self,local_player_pos):
+    def update_bullets(self,local_player_pos,all_players):
         # Update existing bullets
         for bullet in self.remote_bullets[:]:
             bullet.update()
+            
+            for player in all_players:
+                if player.id != self.id and not player.is_dead:  # Exclude self and dead players
+                    player_rect = pygame.Rect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE)
+                    if bullet.rect.colliderect(player_rect):  # Collision detected
+                        player.health -= 5  
+                        print(f"Player {player.id} hit! Health: {player.health}")  
+
+                        if player.health <= 0:
+                            player.is_dead = True
+                            print(f"Player {player.id} is dead!")  
+                            # Trigger respawn logic (handled elsewhere)
+
+                        self.remote_bullets.remove(bullet) 
+                        break
             sound_manager = SoundManager()
             sound_manager.update_remote_player_volume(local_player_pos,[self])
             sound_manager.play_bullet_sound_remote(self.id)

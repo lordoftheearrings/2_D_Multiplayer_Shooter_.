@@ -3,13 +3,13 @@ import math
 
 BULLET_SPEED = 20
 BULLET_RADIUS = 3
-BULLET_MAX_DISTANCE = 400  # Maximum bullet travel distance
+BULLET_MAX_DISTANCE = 400 
 
 class Bullet:
     def __init__(self, x, y, angle, game_map=None):
         self.x = x
         self.y = y
-        self.spawn_x = x  # Track the starting point for max distance
+        self.spawn_x = x  
         self.spawn_y = y
         self.angle = angle
         self.speed = BULLET_SPEED
@@ -61,15 +61,59 @@ class FiringManager:
         self.shoot_cooldown = 100
         self.last_shot_time = 0
         self.sound_manager= sound_manager
+        
+        # Reload attributes
+        self.magazine_size = 25  
+        self.current_ammo = self.magazine_size  
+        self.reload_time = 900  # Time to reload in milliseconds
+        self.is_reloading = False
+        self.reload_start_time = 0
 
     def handle_input(self):
         mouse_pressed = pygame.mouse.get_pressed()
         now = pygame.time.get_ticks()
         if mouse_pressed[0]:  # Left click
-            if now - self.last_shot_time > self.shoot_cooldown:
-                self.last_shot_time = now
-                self.fire_bullet()
+            if not self.is_reloading and self.current_ammo > 0:
+                if now - self.last_shot_time > self.shoot_cooldown:
+                    self.last_shot_time = now
+                    self.fire_bullet()
+                    self.current_ammo -= 1  # Decrease ammo count
+            elif self.current_ammo == 0 and not self.is_reloading:
+                self.start_reload(now)
 
+
+    
+    def start_reload(self, now):
+        self.is_reloading = True
+        self.reload_start_time = now
+        print("Reloading...")
+
+    def update(self):
+        now = pygame.time.get_ticks()
+
+        # Handle reloading
+        if self.is_reloading and now - self.reload_start_time > self.reload_time:
+            self.complete_reload()
+
+        # Update bullets and mark for removal if needed
+        bullets_to_remove = []
+        for bullet in self.bullets:
+            bullet.update()
+            if bullet.has_exceeded_range() or bullet.destroyed:
+                bullets_to_remove.append(bullet)
+
+        # Remove marked bullets outside the loop
+        for bullet in bullets_to_remove:
+            self.bullets.remove(bullet)
+            del bullet  # Ensure the bullet is deleted from memory
+
+    def complete_reload(self):
+        self.is_reloading = False
+        self.current_ammo = self.magazine_size
+        print("Reload complete!")
+
+
+    
     def fire_bullet(self):
         # --- 1) Player center in world coords ---
         px = self.player.x + self.player.rect.width // 2
@@ -100,11 +144,11 @@ class FiringManager:
 
         
 
-    def update(self):
-        for bullet in self.bullets[:]:
-            bullet.update()
-            if bullet.has_exceeded_range() or bullet.destroyed:
-                self.bullets.remove(bullet)
+    # def update(self):
+    #     for bullet in self.bullets[:]:
+    #         bullet.update()
+    #         if bullet.has_exceeded_range() or bullet.destroyed:
+    #             self.bullets.remove(bullet)
 
     def draw_dotted_line(self, surface, color, start_pos, end_pos, width=3, dash_length=20):
         x1, y1 = start_pos
