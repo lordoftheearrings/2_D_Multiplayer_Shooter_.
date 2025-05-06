@@ -160,14 +160,15 @@ class RemotePlayer(Player):
     def spawn_remote_bullet(self, spawn_x, spawn_y, angle):
         """Create a new remote bullet with spawn position and angle"""
         new_bullet = Bullet(spawn_x, spawn_y, angle, self.game_map)
-        sound_manager = SoundManager()
-        sound_manager.play_bullet_sound()
         self.remote_bullets.append(new_bullet)
 
-    def update_bullets(self):
+    def update_bullets(self,local_player_pos):
         # Update existing bullets
         for bullet in self.remote_bullets[:]:
             bullet.update()
+            sound_manager = SoundManager()
+            sound_manager.update_remote_player_volume(local_player_pos,[self])
+            sound_manager.play_bullet_sound_remote(self.id)
             if bullet.has_exceeded_range():
                 self.remote_bullets.remove(bullet)
 

@@ -162,6 +162,7 @@ while True:
 
     # Update and draw local player
     player.update(keys, clock.get_time() / 1000)
+    local_player_pos= (player.x, player.y)
     player.draw(screen, camera)
     player.update_bullets()
     player.draw_bullets(screen)
@@ -176,7 +177,7 @@ while True:
             delta_time=clock.get_time() / 1000
         )
         remote_player.draw(screen, camera)
-        remote_player.update_bullets()
+        remote_player.update_bullets(local_player_pos)
         remote_player.draw_bullets(screen, camera)
     
     pygame.display.flip()
