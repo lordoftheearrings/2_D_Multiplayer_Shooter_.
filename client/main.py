@@ -178,7 +178,7 @@ while True:
     for player in all_players:
         if player.is_dead and player.death_time:
             print(f"Player {player.id} is respawning......")
-            if time.time() - player.death_time > 2:
+            if time.time() - player.death_time > 4:
                 spawn_x, spawn_y = random.choice(spawn_points)
                 while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER_SIZE)):
                     spawn_x, spawn_y = random.choice(spawn_points)

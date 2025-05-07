@@ -6,6 +6,7 @@ class SoundManager:
         self.jetpack_sound = pygame.mixer.Sound("assets/sounds/jet-sound.wav")
         self.bullet_sound = pygame.mixer.Sound("assets/sounds/bullet-sound.wav")
         self.reload_sound = pygame.mixer.Sound("assets/sounds/reload.wav")
+        self.death_sound = pygame.mixer.Sound("assets/sounds/deathsound.wav")
         self.jetpack_sound.set_volume(0)
         self.jetpack_fading_in = False
         self.remote_player_volumes = {}  
@@ -40,6 +41,9 @@ class SoundManager:
         
     def play_reload_sound(self):
         pygame.mixer.Sound.play(self.reload_sound)
+        
+    def play_death_sound(self): 
+        pygame.mixer.Sound.play(self.death_sound)
         
     def calculate_volume(self, local_player_pos, remote_player_pos):
         """Calculate volume based on proximity."""

@@ -73,7 +73,7 @@ class Player:
             else:
                 self.current_animation = "idle"
             self.facing_left = facing_left
-
+        
         # Update animation frames
         if delta_time is not None:
             self.animations[self.current_animation].update(delta_time)
@@ -202,7 +202,7 @@ class RemotePlayer(Player):
                         if player.health <= 0:
                             player.is_dead = True
                             player.death_time = time.time()
-                            player.current_animation = "dead"
+                            player.sound_manager.play_death_sound()
                             print(f"Player {player.id} is dead!")  
 
                         self.remote_bullets.remove(bullet) 
