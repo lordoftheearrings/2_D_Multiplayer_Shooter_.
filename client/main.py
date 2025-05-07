@@ -11,13 +11,14 @@ from player import Player
 from firing import FiringManager
 from sound import SoundManager
 import time
+from overlay import draw_overlay
 
 # Initialize Pygame
 pygame.init()
 
 # Set up the game screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("2D Game")
+pygame.display.set_caption("2D Game First Draft")
 FONT = pygame.font.SysFont(None, 20)
 
 # Initialize the game map and camera
@@ -26,15 +27,25 @@ map_width = game_map.tmx_data.width * game_map.tmx_data.tilewidth
 map_height = game_map.tmx_data.height * game_map.tmx_data.tileheight
 camera = Camera(map_width, map_height)
 
+
+heart_icon = pygame.image.load("assets/heart.png").convert_alpha()
+bullet_icon = pygame.image.load("assets/bullet.png").convert_alpha()
+
+heart_icon = pygame.transform.scale(heart_icon, (30, 30))  
+bullet_icon = pygame.transform.scale(bullet_icon, (30, 30)) 
+
+
+
 clock = pygame.time.Clock()
 
 # Local player initialization
 player_id = str(random.randint(1000, 9999))
 
-spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
+spawn_points =  game_map.generate_spawn_points(num_regions_x=3, num_regions_y=3, points_per_region=1)
+spawn_x, spawn_y = random.choice(spawn_points)
 while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER_SIZE)):
-    spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
-
+    spawn_x, spawn_y = random.choice(spawn_points)
+    
 player = Player(player_id, spawn_x, spawn_y, LOCAL_PLAYER_COLOR, camera)
 sound_manager = SoundManager()
 player.firing_manager = FiringManager(player, camera, game_map, sound_manager)
@@ -57,7 +68,7 @@ while True:
     keys = pygame.key.get_pressed()
     dx, dy = 0, 0
     moved = False
-    player.handle_firing_input()
+    player.handle_firing_input(keys)
     
     # Support both arrow keys and WASD
     up = keys[pygame.K_UP] or keys[pygame.K_w]
@@ -168,23 +179,25 @@ while True:
         if player.is_dead and player.death_time:
             print(f"Player {player.id} is respawning......")
             if time.time() - player.death_time > 2:
-                spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
+                spawn_x, spawn_y = random.choice(spawn_points)
                 while game_map.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER_SIZE)):
-                    spawn_x, spawn_y = random.randint(50, 450), random.randint(50, 450)
+                    spawn_x, spawn_y = random.choice(spawn_points)
                 player.respawn(spawn_x, spawn_y)
+                player.firing_manager.reset_ammo()
 
     # Draw and update all players
     for player in all_players:
-        if player.is_dead:
-            continue  # Skip drawing dead players
+        if player.is_dead :
+            continue  
 
         player.draw(screen, camera)
         if player.is_local:
             player.update(keys, clock.get_time() / 1000)
-            local_player_pos = (player.x, player.y)  # Update local player position
+            local_player_pos = (player.x, player.y)  
         player.update_bullets()
         player.draw_bullets(screen)
-
+        
+    draw_overlay(screen, player, bullet_icon, heart_icon) 
     
 
 
@@ -199,6 +212,7 @@ while True:
             is_running=remote_player.is_running,
             facing_left=remote_player.facing_left,
             health=remote_player.health,
+            is_dead=remote_player.is_dead,
             delta_time=clock.get_time() / 1000
         )
         remote_player.draw(screen, camera)

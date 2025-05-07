@@ -1,6 +1,7 @@
 import pygame
-import os
+import os,random
 from pytmx.util_pygame import load_pygame
+from utils import *
 
 class GameMap:
     def __init__(self, map_file, bg_image):
@@ -64,3 +65,25 @@ class GameMap:
 
     def check_collision(self, player_rect):
         return any(player_rect.colliderect(rect) for rect in self.solid_rects)
+
+    
+    def generate_spawn_points(self, num_regions_x=3, num_regions_y=3, points_per_region=1):
+        spawn_points = []
+        region_width = self.tmx_data.width * self.tmx_data.tilewidth // num_regions_x
+        region_height = self.tmx_data.height * self.tmx_data.tileheight // num_regions_y
+
+        for region_x in range(num_regions_x):
+            for region_y in range(num_regions_y):
+                for _ in range(points_per_region):
+                    # Generate a random point within the region
+                    spawn_x = random.randint(region_x * region_width, (region_x + 1) * region_width - PLAYER_SIZE)
+                    spawn_y = random.randint(region_y * region_height, (region_y + 1) * region_height - PLAYER_SIZE)
+
+                    # Check for collision
+                    while self.check_collision(pygame.Rect(spawn_x, spawn_y, PLAYER_SIZE, PLAYER_SIZE)):
+                        spawn_x = random.randint(region_x * region_width, (region_x + 1) * region_width - PLAYER_SIZE)
+                        spawn_y = random.randint(region_y * region_height, (region_y + 1) * region_height - PLAYER_SIZE)
+
+                    spawn_points.append((spawn_x, spawn_y))
+
+        return spawn_points

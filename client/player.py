@@ -25,12 +25,14 @@ class Player:
                 "idle": Animation("assets/player/idleone.png", 0.1, scale=1.4),
                 "run": Animation(["assets/player/runone.png", "assets/player/runtwo.png"], 0.2, scale=1.4),
                 "fly": Animation("assets/player/flyone.png", 0.1, scale=1.4),
+                "dead": Animation(["assets/player/death1.png", "assets/player/death2.png"], 0.1, scale=1.4),
             }
         else:
             self.animations = {
                 "idle": Animation("assets/player/enemyidle.png", 1, scale=1.5),
                 "run": Animation(["assets/player/enemyrunone.png", "assets/player/enemyruntwo.png"], 0.2, scale=1.5),
                 "fly": Animation("assets/player/enemyfly.png", 1, scale=1.5),
+                "dead": Animation(["assets/player/enemydeath1.png", "assets/player/enemydeath2.png"], 0.1, scale=1.4),
             }
 
         self.current_animation = "idle"
@@ -49,7 +51,7 @@ class Player:
         self.sound_manager = SoundManager() if self.is_local else None
         self.firing_manager = FiringManager(self, camera) if is_local else None
 
-    def update(self, keys=None, delta_time=None, is_flying=None, is_running=None, facing_left=None):
+    def update(self, keys=None, delta_time=None, is_flying=None, is_running=None,is_dead =False, facing_left=None):
         if self.is_local:
             # Update animation based on input
             if keys[pygame.K_UP] or keys[pygame.K_w]:
@@ -66,6 +68,8 @@ class Player:
                 self.current_animation = "fly"
             elif is_running:
                 self.current_animation = "run"
+            elif is_dead:
+                self.current_animation = "dead"
             else:
                 self.current_animation = "idle"
             self.facing_left = facing_left
@@ -123,9 +127,9 @@ class Player:
         self.death_time = None  
         print(f"Player {self.id} respawned at ({self.x}, {self.y})")
 
-    def handle_firing_input(self):
+    def handle_firing_input(self,keys):
         if self.is_local and self.firing_manager:
-            self.firing_manager.handle_input()
+            self.firing_manager.handle_input(keys)
 
     def update_bullets(self):
         if self.is_local and self.firing_manager:
@@ -147,6 +151,8 @@ class RemotePlayer(Player):
             "idle": Animation("assets/player/enemyidle.png", 1, scale=1.5),
             "run": Animation(["assets/player/enemyrunone.png", "assets/player/enemyrunthree.png"], 0.2, scale=1.5),
             "fly": Animation("assets/player/enemyfly.png", 1, scale=1.5),
+            "dead": Animation(["assets/player/enemydeath1.png", "assets/player/enemydeath2.png"], 0.1, scale=1.4),
+
         }
         self.current_animation = "idle"  # Default to idle animation
         self.facing_left = False  # Default to not facing left
@@ -155,7 +161,7 @@ class RemotePlayer(Player):
         self.camera = camera
         self.is_dead = False
 
-    def update(self, is_flying, is_running, facing_left, health, delta_time=None):
+    def update(self, is_flying, is_running, facing_left, health,is_dead = False, delta_time=None):
         if delta_time is not None:
             # Update animation for remote player based on time elapsed
             self.animations[self.current_animation].update(delta_time)
@@ -164,18 +170,20 @@ class RemotePlayer(Player):
         self.is_flying = is_flying
         self.is_running = is_running
         self.facing_left = facing_left
-        self.health = health  # Update health as well
+        self.health = health 
+        self.is_dead = is_dead
 
         # Handle animation based on movement states
         if self.is_flying:
             self.current_animation = "fly"
         elif self.is_running:
             self.current_animation = "run"
+        elif self.is_dead:
+            self.current_animation = "dead"
         else:
             self.current_animation = "idle"
 
     def spawn_remote_bullet(self, spawn_x, spawn_y, angle):
-        """Create a new remote bullet with spawn position and angle"""
         new_bullet = Bullet(spawn_x, spawn_y, angle, self.game_map)
         self.remote_bullets.append(new_bullet)
 
@@ -194,11 +202,12 @@ class RemotePlayer(Player):
                         if player.health <= 0:
                             player.is_dead = True
                             player.death_time = time.time()
+                            player.current_animation = "dead"
                             print(f"Player {player.id} is dead!")  
 
                         self.remote_bullets.remove(bullet) 
                         break
-            sound_manager = SoundManager()
+            sound_manager=SoundManager()
             sound_manager.update_remote_player_volume(local_player_pos,[self])
             sound_manager.play_bullet_sound_remote(self.id)
             if bullet.has_exceeded_range():

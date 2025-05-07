@@ -68,8 +68,8 @@ class FiringManager:
         self.reload_time = 900  # Time to reload in milliseconds
         self.is_reloading = False
         self.reload_start_time = 0
-
-    def handle_input(self):
+        
+    def handle_input(self,keys):
         mouse_pressed = pygame.mouse.get_pressed()
         now = pygame.time.get_ticks()
         if mouse_pressed[0]:  # Left click
@@ -80,18 +80,22 @@ class FiringManager:
                     self.current_ammo -= 1  # Decrease ammo count
             elif self.current_ammo == 0 and not self.is_reloading:
                 self.start_reload(now)
+        
+        if keys[pygame.K_r] and not self.is_reloading and self.current_ammo < self.magazine_size:
+            self.start_reload(now)
 
 
     
     def start_reload(self, now):
         self.is_reloading = True
+        self.sound_manager.play_reload_sound()
         self.reload_start_time = now
         print("Reloading...")
 
     def update(self):
         now = pygame.time.get_ticks()
 
-        # Handle reloading
+      
         if self.is_reloading and now - self.reload_start_time > self.reload_time:
             self.complete_reload()
 
@@ -112,6 +116,9 @@ class FiringManager:
         self.current_ammo = self.magazine_size
         print("Reload complete!")
 
+    def reset_ammo(self):
+        self.current_ammo = self.magazine_size
+        self.is_reloading = False
 
     
     def fire_bullet(self):
