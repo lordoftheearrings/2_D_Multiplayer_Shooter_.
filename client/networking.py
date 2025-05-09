@@ -62,13 +62,13 @@ class WebSocketClient:
         
         self.is_connecting = True
         try:
-            self.position_ws = await self.connect_with_retry("ws://localhost:8000/ws/game/position/")
+            self.position_ws = await self.connect_with_retry("ws://localhost:8000/ws/game/position/{self.lobby_id}/")
             await asyncio.sleep(1)  # Wait 1 second between connections
             
-            self.bullet_ws = await self.connect_with_retry("ws://localhost:8000/ws/game/bullets/")
+            self.bullet_ws = await self.connect_with_retry("ws://localhost:8000/ws/game/bullets/{self.lobby_id}/")
             await asyncio.sleep(1)
             
-            self.state_ws = await self.connect_with_retry("ws://localhost:8000/ws/game/state/")
+            self.state_ws = await self.connect_with_retry("ws://localhost:8000/ws/game/state/{self.lobby_id}/")
             
             # Cancel any existing receive tasks
             for task in self.receive_tasks.values():

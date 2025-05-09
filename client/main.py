@@ -12,9 +12,26 @@ from firing import FiringManager
 from sound import SoundManager
 import time
 from overlay import draw_overlay
+#from menu import InputBox, Button
 
 # Initialize Pygame
 pygame.init()
+
+# game_state = "menu"
+# name_input = InputBox(300, 200, 200, 40)
+# lobby_input = InputBox(300, 260, 200, 40)
+# selected_lobby = None
+# player_name = None
+
+# def start_game():
+#     global game_state, selected_lobby, player_name
+#     player_name = name_input.get_text()
+#     selected_lobby = lobby_input.get_text()
+#     if player_name and selected_lobby:
+#         game_state = "playing"
+
+# host_button = Button(300, 320, 90, 40, "Host", start_game)
+# join_button = Button(410, 320, 90, 40, "Join", start_game)
 
 # Set up the game screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -22,7 +39,7 @@ pygame.display.set_caption("2D Game First Draft")
 FONT = pygame.font.SysFont(None, 20)
 
 # Initialize the game map and camera
-game_map = GameMap('map.tmx', 'background.jpg')
+game_map = GameMap('map2.tmx', 'background4.png')
 map_width = game_map.tmx_data.width * game_map.tmx_data.tilewidth
 map_height = game_map.tmx_data.height * game_map.tmx_data.tileheight
 camera = Camera(map_width, map_height)
@@ -32,7 +49,7 @@ heart_icon = pygame.image.load("assets/heart.png").convert_alpha()
 bullet_icon = pygame.image.load("assets/bullet.png").convert_alpha()
 
 heart_icon = pygame.transform.scale(heart_icon, (30, 30))  
-bullet_icon = pygame.transform.scale(bullet_icon, (30, 30)) 
+bullet_icon = pygame.transform.scale(bullet_icon, (50, 30)) 
 
 
 
@@ -54,11 +71,33 @@ player.firing_manager = FiringManager(player, camera, game_map, sound_manager)
 other_players = {}
 
 # Networking setup
-client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players, camera, game_map)
+client = WebSocketClient("ws://127.0.0.1:8000/ws/game/", player, other_players, camera, game_map)#,lobby_id=selected_lobby)
 client.start()  # Start the event loop
 all_players = [player] + list(other_players.values())
 # Game loop
 while True:
+    # if game_state != "playing":
+    #     screen.fill((30, 30, 30))
+    #     title = FONT.render("Enter Player Name and Lobby ID", True, (255, 255, 255))
+    #     screen.blit(title, (250, 150))
+    #     name_input.draw(screen)
+    #     lobby_input.draw(screen)
+    #     host_button.draw(screen)
+    #     join_button.draw(screen)
+
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             pygame.quit()
+    #             sys.exit()
+    #         name_input.handle_event(event)
+    #         lobby_input.handle_event(event)
+    #         host_button.handle_event(event)
+    #         join_button.handle_event(event)
+
+    #     pygame.display.flip()
+    #     clock.tick(30)
+    #     continue  # skip game loop until ready
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             client.stop()  # Stop the event loop
