@@ -131,9 +131,9 @@ class Player:
         if self.is_local and self.firing_manager:
             self.firing_manager.handle_input(keys)
 
-    def update_bullets(self):
+    def update_bullets(self,remote_players):
         if self.is_local and self.firing_manager:
-            self.firing_manager.update()
+            self.firing_manager.update(remote_players)
 
     def draw_bullets(self, screen):
         if self.is_local and self.firing_manager:
@@ -197,7 +197,7 @@ class RemotePlayer(Player):
                     player_rect = pygame.Rect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE)
                     if bullet.rect.colliderect(player_rect):  # Collision detected
                         player.health -= 5  
-                        print(f"Player {player.id} hit! Health: {player.health}")  
+                        print(f"you are hit by {self.id}! Health: {player.health}")  
 
                         if player.health <= 0:
                             player.is_dead = True

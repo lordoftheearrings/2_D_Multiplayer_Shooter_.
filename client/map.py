@@ -119,9 +119,11 @@ class GameMap:
         # Load map and background
         self.tmx_data = load_pygame(map_file_path)
         self.background = pygame.image.load(bg_image_path).convert()
-        
-        # Get background dimensions
-        self.bg_width, self.bg_height = self.background.get_size()
+        self.background = pygame.transform.scale(
+            self.background, 
+            (self.tmx_data.width * self.tmx_data.tilewidth * 1,
+             self.tmx_data.height * self.tmx_data.tileheight * 1)
+        )
 
         # Fix tileset paths
         self.set_tile_images(base_path)
@@ -156,21 +158,41 @@ class GameMap:
                         print(f"Tile image not found: {image_path}")
                         raise
 
-    def draw_background(self, screen, camera_x, camera_y):
-        """
-        Draws the background with a parallax effect.
-        Scrolls the background based on camera position.
-        """
-        # Parallax effect - adjust the speed of scrolling
-        parallax_speed = 0.5  # Adjust to get the right effect
-        bg_x = int(-camera_x * parallax_speed)
-        bg_y = int(-camera_y * parallax_speed)
-
-        # Repeat the background to fill the screen
-        screen_width, screen_height = screen.get_size()
-        for x in range(bg_x, bg_x + screen_width, self.bg_width):
-            for y in range(bg_y, bg_y + screen_height, self.bg_height):
-                screen.blit(self.background, (x, y))
+    def draw_background(self, screen, camera):
+        # Get screen dimensions
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+        
+        # Calculate parallax effect
+        parallax_x = camera.camera.x * 0.1  # Slower movement for background
+        parallax_y = camera.camera.y * 0.1
+        
+        # Calculate the visible portion of the background
+        view_rect = pygame.Rect(
+            parallax_x,
+            parallax_y,
+            screen_width,
+            screen_height
+        )
+        
+        # Calculate the position to draw the background
+        bg_x = -parallax_x % self.background.get_width()
+        bg_y = -parallax_y % self.background.get_height()
+        
+        # Clear the screen first
+        screen.fill((0, 0, 0))  # Fill with black or any base color
+        
+        # Draw the main background tile
+        screen.blit(self.background, (bg_x, bg_y))
+        
+        # Draw additional background tiles if needed to fill the screen
+        if bg_x > 0:
+            screen.blit(self.background, (bg_x - self.background.get_width(), bg_y))
+        if bg_y > 0:
+            screen.blit(self.background, (bg_x, bg_y - self.background.get_height()))
+        if bg_x > 0 and bg_y > 0:
+            screen.blit(self.background, (bg_x - self.background.get_width(), 
+                                        bg_y - self.background.get_height()))
 
     def draw_map(self, screen):
         for layer in self.tmx_data.visible_layers:

@@ -39,7 +39,7 @@ pygame.display.set_caption("2D Game First Draft")
 FONT = pygame.font.SysFont(None, 20)
 
 # Initialize the game map and camera
-game_map = GameMap('map2.tmx', 'background4.png')
+game_map = GameMap('map2.tmx', 'background.jpg')
 map_width = game_map.tmx_data.width * game_map.tmx_data.tilewidth
 map_height = game_map.tmx_data.height * game_map.tmx_data.tileheight
 camera = Camera(map_width, map_height)
@@ -197,8 +197,10 @@ while True:
     camera.update(player_rect_x)
 
     # --- Drawing ---
-    bg_offset = (camera.camera.left // 3, camera.camera.top // 3)
-    screen.blit(game_map.background, (-bg_offset[0], -bg_offset[1]))
+    # bg_offset = (camera.camera.left // 3, camera.camera.top // 3)
+    # screen.blit(game_map.background, (-bg_offset[0], -bg_offset[1]))
+    screen.fill((0,0, 0))
+    game_map.draw_background(screen, camera)
 
     for layer in game_map.tmx_data.visible_layers:
         if hasattr(layer, 'tiles'):
@@ -223,7 +225,7 @@ while True:
                     spawn_x, spawn_y = random.choice(spawn_points)
                 player.respawn(spawn_x, spawn_y)
                 player.firing_manager.reset_ammo()
-
+    remote_players = other_players.values()
     # Draw and update all players
     for player in all_players:
         if player.is_dead :
@@ -233,13 +235,13 @@ while True:
         if player.is_local:
             player.update(keys, clock.get_time() / 1000)
             local_player_pos = (player.x, player.y)  
-        player.update_bullets()
+        player.update_bullets(remote_players)
         player.draw_bullets(screen)
         
     draw_overlay(screen, player, bullet_icon, heart_icon) 
     
 
-
+    
       
     # Update and draw remote players
     for remote_player in other_players.values():

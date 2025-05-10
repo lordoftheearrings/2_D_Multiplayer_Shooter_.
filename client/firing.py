@@ -1,9 +1,10 @@
 import pygame
 import math
+from utils import *
 
 BULLET_SPEED = 20
 BULLET_RADIUS = 3
-BULLET_MAX_DISTANCE = 400 
+BULLET_MAX_DISTANCE = 500 
 
 class Bullet:
     def __init__(self, x, y, angle, game_map=None):
@@ -92,24 +93,33 @@ class FiringManager:
         self.reload_start_time = now
         print("Reloading...")
 
-    def update(self):
+    def update(self, remote_players):
         now = pygame.time.get_ticks()
 
-      
         if self.is_reloading and now - self.reload_start_time > self.reload_time:
             self.complete_reload()
 
-        # Update bullets and mark for removal if needed
-        bullets_to_remove = []
-        for bullet in self.bullets:
+        # Update bullets with collision priority
+        for bullet in self.bullets[:]:
             bullet.update()
-            if bullet.has_exceeded_range() or bullet.destroyed:
-                bullets_to_remove.append(bullet)
-
-        # Remove marked bullets outside the loop
-        for bullet in bullets_to_remove:
-            self.bullets.remove(bullet)
-            del bullet  # Ensure the bullet is deleted from memory
+            
+            bullet_hit = False
+            
+            # Check player collisions first
+            if remote_players:
+                for remote_player in remote_players:
+                    if remote_player.id != self.player.id and not remote_player.is_dead:
+                        player_rect = pygame.Rect(remote_player.x, remote_player.y, PLAYER_SIZE, PLAYER_SIZE)
+                        if bullet.rect.colliderect(player_rect):
+                            print(f"you hit player {remote_player.id}")  # Debug print
+                            self.bullets.remove(bullet)
+                            bullet_hit = True
+                            break
+            
+            # Only check range if bullet hasn't hit a player
+            if not bullet_hit and (bullet.has_exceeded_range() or bullet.destroyed):
+                if bullet in self.bullets:  # Safety check
+                    self.bullets.remove(bullet)
 
     def complete_reload(self):
         self.is_reloading = False
@@ -188,8 +198,8 @@ class FiringManager:
         start_x = px + offset_distance * math.cos(angle)
         start_y = py + offset_distance * math.sin(angle)
 
-        end_x = start_x + (BULLET_MAX_DISTANCE-200) * math.cos(angle)
-        end_y = start_y + (BULLET_MAX_DISTANCE-200) * math.sin(angle)
+        end_x = start_x + (BULLET_MAX_DISTANCE-300) * math.cos(angle)
+        end_y = start_y + (BULLET_MAX_DISTANCE-300) * math.sin(angle)
 
         self.draw_dotted_line(
             screen,
