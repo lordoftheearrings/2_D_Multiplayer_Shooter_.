@@ -16,6 +16,7 @@ from overlay import draw_overlay
 
 # Initialize Pygame
 pygame.init()
+pygame.mouse.set_visible(False)
 
 # game_state = "menu"
 # name_input = InputBox(300, 200, 200, 40)
@@ -34,12 +35,27 @@ pygame.init()
 # join_button = Button(410, 320, 90, 40, "Join", start_game)
 
 # Set up the game screen
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("2D Game First Draft")
+# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+# pygame.display.set_caption("2D Game First Draft")
 FONT = pygame.font.SysFont(None, 20)
 
+
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("2D Game First Draft")
+
+
+# Replace the quit_game function with this improved version
+def quit_game():
+    # Show cursor before quitting
+    pygame.mouse.set_visible(True)
+    client.stop()
+    pygame.quit()
+    sys.exit()
+
+
 # Initialize the game map and camera
-game_map = GameMap('map2.tmx', 'background.jpg')
+game_map = GameMap('map2.tmx', 'background-dark.jpg')
 map_width = game_map.tmx_data.width * game_map.tmx_data.tilewidth
 map_height = game_map.tmx_data.height * game_map.tmx_data.tileheight
 camera = Camera(map_width, map_height)
@@ -99,10 +115,11 @@ while True:
     #     continue  # skip game loop until ready
 
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            client.stop()  # Stop the event loop
-            pygame.quit()
-            sys.exit()
+        if event.type == pygame.QUIT: 
+            quit_game()  
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:  
+                quit_game()
 
     keys = pygame.key.get_pressed()
     dx, dy = 0, 0

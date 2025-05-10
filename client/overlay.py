@@ -9,7 +9,7 @@ def draw_overlay(screen, player, bullet_icon, heart_icon):
     health_bar_height = 20
 
     # Draw health bar outline
-    pygame.draw.rect(screen, (0, 0, 0), (health_bar_x - 1, health_bar_y - 1, health_bar_width + 2, health_bar_height + 2))
+    pygame.draw.rect(screen, (255, 255, 255), (health_bar_x - 1, health_bar_y - 1, health_bar_width + 2, health_bar_height + 2))
 
     # Draw health bar fill
     health_fill_width = int((player.health / 100) * health_bar_width)
@@ -24,7 +24,7 @@ def draw_overlay(screen, player, bullet_icon, heart_icon):
     box_width = 170
     box_height = 40
     translucent_box = pygame.Surface((box_width, box_height), pygame.SRCALPHA) 
-    translucent_box.fill((0, 0, 0, 100))  # Black with 50% opacity
+    translucent_box.fill((255, 255, 255, 100))  # Black with 50% opacity
     screen.blit(translucent_box, (bullet_icon_x - 10, bullet_icon_y - 5))
 
     # Draw bullet icon

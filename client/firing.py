@@ -59,14 +59,14 @@ class FiringManager:
         self.game_map = game_map
         self.bullets = []
         self.new_bullets = []
-        self.shoot_cooldown = 100
+        self.shoot_cooldown = 110
         self.last_shot_time = 0
         self.sound_manager= sound_manager
         
         # Reload attributes
-        self.magazine_size = 25  
+        self.magazine_size = 30  
         self.current_ammo = self.magazine_size  
-        self.reload_time = 900  # Time to reload in milliseconds
+        self.reload_time = 850  
         self.is_reloading = False
         self.reload_start_time = 0
         
@@ -167,7 +167,7 @@ class FiringManager:
     #         if bullet.has_exceeded_range() or bullet.destroyed:
     #             self.bullets.remove(bullet)
 
-    def draw_dotted_line(self, surface, color, start_pos, end_pos, width=3, dash_length=20):
+    def draw_dotted_line(self, surface, color, start_pos, end_pos, width=3, dash_length=40):
         x1, y1 = start_pos
         x2, y2 = end_pos
         dl = math.hypot(x2 - x1, y2 - y1)
@@ -203,11 +203,11 @@ class FiringManager:
 
         self.draw_dotted_line(
             screen,
-            (0, 0, 0),                
+            (255, 255, 255),                
             (start_x, start_y),
             (end_x, end_y),
             width=3,
-            dash_length=20
+            dash_length=30
         )
 
     def draw(self, player, screen, camera):

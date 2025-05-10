@@ -116,14 +116,10 @@ class GameMap:
         map_file_path = os.path.join(base_path, 'assets', map_file)
         bg_image_path = os.path.join(base_path, 'assets', bg_image)
 
-        # Load map and background
         self.tmx_data = load_pygame(map_file_path)
+        
+        # Load background directly - assuming image is already 5600x4200
         self.background = pygame.image.load(bg_image_path).convert()
-        self.background = pygame.transform.scale(
-            self.background, 
-            (self.tmx_data.width * self.tmx_data.tilewidth * 1,
-             self.tmx_data.height * self.tmx_data.tileheight * 1)
-        )
 
         # Fix tileset paths
         self.set_tile_images(base_path)
@@ -159,41 +155,40 @@ class GameMap:
                         raise
 
     def draw_background(self, screen, camera):
+        # Clear screen
+        screen.fill((0, 0, 0))
+        
+        # Calculate map boundaries
+        map_width = self.tmx_data.width * self.tmx_data.tilewidth
+        map_height = self.tmx_data.height * self.tmx_data.tileheight
+        
         # Get screen dimensions
         screen_width = screen.get_width()
         screen_height = screen.get_height()
         
-        # Calculate parallax effect
-        parallax_x = camera.camera.x * 0.1  # Slower movement for background
-        parallax_y = camera.camera.y * 0.1
+        # Calculate maximum camera bounds
+        max_camera_x = max(0, map_width - screen_width)
+        max_camera_y = max(0, map_height - screen_height)
         
-        # Calculate the visible portion of the background
-        view_rect = pygame.Rect(
-            parallax_x,
-            parallax_y,
-            screen_width,
-            screen_height
+        # Clamp camera position to map boundaries
+        camera_x = max(0, min(camera.camera.x, max_camera_x))
+        camera_y = max(0, min(camera.camera.y, max_camera_y))
+        
+        # Calculate source rectangle dimensions
+        source_width = min(screen_width, map_width - camera_x)
+        source_height = min(screen_height, map_height - camera_y)
+        
+        # Draw the visible portion with clamped coordinates
+        screen.blit(
+            self.background,
+            (0, 0),  # Destination position
+            (
+                camera_x,
+                camera_y,
+                source_width,  # Use calculated dimensions
+                source_height  # Use calculated dimensions
+            )  # Source rectangle
         )
-        
-        # Calculate the position to draw the background
-        bg_x = -parallax_x % self.background.get_width()
-        bg_y = -parallax_y % self.background.get_height()
-        
-        # Clear the screen first
-        screen.fill((0, 0, 0))  # Fill with black or any base color
-        
-        # Draw the main background tile
-        screen.blit(self.background, (bg_x, bg_y))
-        
-        # Draw additional background tiles if needed to fill the screen
-        if bg_x > 0:
-            screen.blit(self.background, (bg_x - self.background.get_width(), bg_y))
-        if bg_y > 0:
-            screen.blit(self.background, (bg_x, bg_y - self.background.get_height()))
-        if bg_x > 0 and bg_y > 0:
-            screen.blit(self.background, (bg_x - self.background.get_width(), 
-                                        bg_y - self.background.get_height()))
-
     def draw_map(self, screen):
         for layer in self.tmx_data.visible_layers:
             if hasattr(layer, 'tiles'):

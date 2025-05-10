@@ -94,7 +94,7 @@ class Player:
 
         # Draw player ID above
         font = pygame.font.SysFont(None, 20)
-        id_text = font.render(self.id, True, (0, 0, 0))  # Black text
+        id_text = font.render(self.id, True, (255, 255, 255))  # Black text
         id_rect = id_text.get_rect(center=(camera_applied_rect.centerx, camera_applied_rect.top - 15))
         screen.blit(id_text, id_rect)
 
@@ -103,7 +103,7 @@ class Player:
         bar_y = camera_applied_rect.top - 7
 
         # Outline (black border)
-        pygame.draw.rect(screen, (0, 0, 0), (bar_x - 1, bar_y - 1, HEALTH_BAR_WIDTH + 2, HEALTH_BAR_HEIGHT + 2))
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x - 1, bar_y - 1, HEALTH_BAR_WIDTH + 2, HEALTH_BAR_HEIGHT + 2))
 
         # Fill color based on local/enemy
         fill_color = (0, 255, 0) if self.is_local else (255, 0, 0)  # Green for local, Red for enemy
@@ -230,7 +230,7 @@ class RemotePlayer(Player):
 
         # Draw player ID above
         font = pygame.font.SysFont(None, 20)
-        id_text = font.render(self.id, True, (0, 0, 0))  # Black text
+        id_text = font.render(self.id, True, (255, 255, 255))  # Black text
         id_rect = id_text.get_rect(center=(camera_applied_rect.centerx, camera_applied_rect.top - 15))
         screen.blit(id_text, id_rect)
 
@@ -239,7 +239,7 @@ class RemotePlayer(Player):
         bar_y = camera_applied_rect.top - 7
 
         # Outline (black border)
-        pygame.draw.rect(screen, (0, 0, 0), (bar_x - 1, bar_y - 1, HEALTH_BAR_WIDTH + 2, HEALTH_BAR_HEIGHT + 2))
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x - 1, bar_y - 1, HEALTH_BAR_WIDTH + 2, HEALTH_BAR_HEIGHT + 2))
 
         # Fill color based on local/enemy
         fill_color = (0, 255, 0) if self.is_local else (255, 0, 0)  # Green for local, Red for enemy
